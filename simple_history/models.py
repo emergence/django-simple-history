@@ -119,13 +119,15 @@ class HistoricalRecords(object):
             pass
         else:
             if hint_class is not sender:  # set in concrete
-                if not (self.inherit and issubclass(sender, hint_class)):  # set in abstract
-                    return
+                if not (self.inherit and issubclass(sender, hint_class)):
+                    return  # set in abstract
         if hasattr(sender._meta, 'simple_history_manager_attribute'):
-            raise exceptions.MultipleRegistrationsError('{}.{} registered multiple times for history tracking.'.format(
-                sender._meta.app_label,
-                sender._meta.object_name,
-            ))
+            raise exceptions.MultipleRegistrationsError(
+                '{}.{} registered multiple times for history tracking.'.format(
+                    sender._meta.app_label,
+                    sender._meta.object_name,
+                )
+            )
         if sender._meta.proxy:
             original_class = [base_class for base_class in sender.__bases__ if base_class._meta.abstract is False][0]
             # Parent model must be registered before the proxy model is

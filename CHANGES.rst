@@ -1,6 +1,15 @@
 Changes
 =======
 
+tip (unreleased)
+----------------
+- Added --batchsize option to the populate_history management command.
+
+1.8.2 (2017-01-19)
+------------------
+- Add Polish locale.
+- Add Django 1.10 support.
+
 1.8.1 (2016-03-19)
 ------------------
 - Clear the threadlocal request object when processing the response to prevent test interactions. (gh-213)

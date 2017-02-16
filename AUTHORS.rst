@@ -11,6 +11,7 @@ Authors
 - Daniel Roschka
 - David Hite
 - George Vilches
+- Grzegorz Bialy
 - Hamish Downer
 - James Pulec
 - Joao Pedro Francese
@@ -32,6 +33,7 @@ Authors
 - Ulysses Vilela
 - vnagendra
 - Lucas Wiman
+- Michael England
 
 Background
 ==========
