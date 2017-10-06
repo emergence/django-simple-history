@@ -94,8 +94,10 @@ class HistoricalRecords(object):
                 field = getattr(cls, field.name).field
                 assert isinstance(field, models.fields.related.ManyToManyField), \
                     ('%s must be a ManyToManyField' % field.name)
-                if not sum([isinstance(item, HistoricalRecords) for item in field.rel.through.__dict__.values()]):
-                    through_model = field.rel.through
+                if not sum([
+                        isinstance(item, HistoricalRecords) for item in field.remote_field.through.__dict__.values()
+                ]):
+                    through_model = field.remote_field.through
                     if through_model._meta.auto_created and not_registered(through_model):
                         through_model.history = HistoricalRecords()
                         register(through_model)
@@ -106,8 +108,10 @@ class HistoricalRecords(object):
                 field = getattr(cls, field_name).field
                 assert isinstance(field, models.fields.related.ManyToManyField), \
                     ('%s must be a ManyToManyField' % field_name)
-                if not sum([isinstance(item, HistoricalRecords) for item in field.rel.through.__dict__.values()]):
-                    through_model = field.rel.through
+                if not sum([
+                        isinstance(item, HistoricalRecords) for item in field.remote_field.through.__dict__.values()
+                ]):
+                    through_model = field.remote_field.through
                     if through_model._meta.auto_created and not_registered(through_model):
                         through_model.history = HistoricalRecords()
                         register(through_model)
@@ -205,7 +209,7 @@ class HistoricalRecords(object):
             try:
                 field.remote_field = copy.copy(field.remote_field)
             except AttributeError:
-                field.rel = copy.copy(field.rel)
+                field.remote_field = copy.copy(field.remote_field)
             if isinstance(field, OrderWrt):
                 # OrderWrt is a proxy field, switch to a plain IntegerField
                 field.__class__ = models.IntegerField
@@ -222,7 +226,7 @@ class HistoricalRecords(object):
                 if getattr(old_field, 'db_column', None):
                     field_arguments['db_column'] = old_field.db_column
                 field = FieldType(
-                    old_field.rel.to,
+                    old_field.remote_field.model,
                     related_name='+',
                     null=True,
                     blank=True,
@@ -307,7 +311,7 @@ class HistoricalRecords(object):
         other side of the m2m relationship.
         """
         for m2m_field in instance._meta.many_to_many:
-            through_model = m2m_field.rel.through
+            through_model = m2m_field.remote_field.through
             if hasattr(through_model._meta, 'simple_history_manager_attribute'):
                 items = through_model.objects.filter(Q(**{m2m_field.m2m_column_name(): instance.pk}))
                 for item in items:
@@ -322,9 +326,9 @@ class HistoricalRecords(object):
         source_field_name, target_field_name = None, None
         for field_name, field_value in sender.__dict__.items():
             if isinstance(field_value, ManyToOneDescriptor):
-                if field_value.field.rel.model == kwargs['model']:
+                if field_value.field.remote_field.model == kwargs['model']:
                     target_field_name = field_name
-                elif isinstance(instance, field_value.field.rel.model):
+                elif isinstance(instance, field_value.field.remote_field.model):
                     source_field_name = field_name
         items = sender.objects.filter(**{source_field_name: instance})
         if kwargs['pk_set']:
@@ -370,7 +374,7 @@ class HistoricalRecords(object):
             return instance._history_user
         except AttributeError:
             try:
-                if self.thread.request.user.is_authenticated():
+                if self.thread.request.user.is_authenticated:
                     return self.thread.request.user
                 return None
             except AttributeError:
@@ -402,7 +406,7 @@ def transform_field(field):
 
 def has_m2m_field(instance, through):
     for m2m_field in instance._meta.many_to_many:
-        if through is m2m_field.rel.through:
+        if through is m2m_field.remote_field.through:
             return True
     return False
 
